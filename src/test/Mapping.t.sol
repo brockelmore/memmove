@@ -32,10 +32,45 @@ contract MappingTest is DSTest {
     }
 
     function testMap() public {
-        Mapping map = createTempMap(10);
+        Mapping map = createTempMap(50);
         Mapping map2 = createTempMap(10);
-        getTempMap(map, 10);
+        getTempMap(map, 50);
         getTempMap(map2, 10);
+    }
+
+    function testMapInstantiationCost() public {
+        uint256 g0 = gasleft();
+        MappingLib.newMapping(1);
+        uint256 g1 = gasleft();
+        emit log_named_uint("cost per instantiation: 1", (g0 - g1));
+    }
+    
+    function testMapInstantiationCost5() public {
+        uint256 g0 = gasleft();
+        MappingLib.newMapping(5);
+        uint256 g1 = gasleft();
+        emit log_named_uint("cost per instantiation: 5", (g0 - g1) / 5);
+    }
+    
+    function testMapInstantiationCost10() public {
+        uint256 g0 = gasleft();
+        MappingLib.newMapping(10);
+        uint256 g1 = gasleft();
+        emit log_named_uint("cost per instantiation: 10", (g0 - g1) / 10);
+    }
+    
+    function testMapInstantiationCost50() public {
+        uint256 g0 = gasleft();
+        MappingLib.newMapping(50);
+        uint256 g1 = gasleft();
+        emit log_named_uint("cost per instantiation: 50", (g0 - g1) / 50);
+    }
+
+    function testMapInstantiationCost100() public {
+        uint256 g0 = gasleft();
+        MappingLib.newMapping(100);
+        uint256 g1 = gasleft();
+        emit log_named_uint("cost per instantiation: 100", (g0 - g1) / 100);
     }
 
     // function testMap() public {
