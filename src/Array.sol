@@ -31,6 +31,9 @@ library ArrayLib {
 
             // store the capacity in the second word (see memory layout above)
             mstore(add(0x20, s), capacityHint)
+
+            // store length as 0 because otherwise the compiler may have rugged us
+            mstore(s, 0x00)
         }
     }
 
@@ -259,12 +262,9 @@ library RefArrayLib {
     function push(Array self, uint256 elem, uint256 overalloc) internal view {
         Array newArr = deref(self).push(elem, overalloc);
         assembly ("memory-safe") {
-            // compare the new array's pointer to the old pointer (mload(self))
-            // if the new array is greater than existing, then a move occurred
-            // in that case, update the reference
-            if gt(newArr, mload(self)) {
-                mstore(self, newArr)
-            }
+            // we always just update the pointer because it is cheaper to do so than check whether
+            // the array moved
+            mstore(self, newArr)
         }
     }
 
