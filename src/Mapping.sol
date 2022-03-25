@@ -38,8 +38,6 @@ library MappingLib {
     using LinkedListLib for LinkedList;
 
     function newMapping(uint16 capacityHint) internal pure returns (Mapping s) {
-        // memory pointers will never be > 2**128, as that would be 340282366920938463463374607431768211456 bytes of memory
-        // which is impossible in the EVM
         Array bucketArray = ArrayLib.newArray(capacityHint);
         for (uint256 i; i < capacityHint; i++) {
             // create a new linked list with a link offset of 64 bytes
@@ -55,7 +53,10 @@ library MappingLib {
     }
 
     // since we never resize the buckets array, the mapping itself can never move out from under us
-    function insert(Mapping self, bytes32 key, uint256 value) internal view {
+    // does a raw insert - it does *not* check for the presence of the key already in the map
+    //
+    // use `update` if you know a key already exists
+    function uncheckedInsert(Mapping self, bytes32 key, uint256 value) internal view {
         uint256 bucket = uint256(key) % buckets(self);
 
         Entry memory entry = Entry({
@@ -75,8 +76,87 @@ library MappingLib {
         Array.wrap(Mapping.unwrap(self)).unsafe_set(bucket, uint256(LinkedList.unwrap(linkedList.push_and_link(entryPtr))));
     }
 
-    function set(Mapping self, bytes32 key, uint256 value) internal view {
-        insert(self, key, value);
+    // since we never resize the buckets array, the mapping itself can never move out from under us
+    // does a raw insert - it *does* check for the presence of the key already in the map and will update it
+    // if it exists
+    function insert(Mapping self, bytes32 key, uint256 value) internal view {
+        uint256 bucket = uint256(key) % buckets(self);
+
+        LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Mapping.unwrap(self)).unsafe_get(bucket)));
+        bytes32 element = linkedList.head();
+        bool success = true;
+        while (success) {
+            bool wasSet;
+            assembly ("memory-safe") {
+                let elemKey := mload(element)
+                if eq(elemKey, key) {
+                    mstore(add(element, 0x20), value)
+                    wasSet := 1
+                }
+            }
+            if (wasSet) {
+                return;
+            }
+            (success, element) = linkedList.next(element);
+        }
+
+        // if we have reached here, the key is not present, add it
+        Entry memory entry = Entry({
+            key: key,
+            value: bytes32(value),
+            next: bytes32(0)
+        });
+        bytes32 entryPtr;
+
+        assembly ("memory-safe") {
+            entryPtr := entry
+        }
+
+        // Safety:
+        //  1. since buckets is guaranteed to be the capacity, we are able to make this unsafe_get
+        Array.wrap(Mapping.unwrap(self)).unsafe_set(bucket, uint256(LinkedList.unwrap(linkedList.push_and_link(entryPtr))));
+    }
+
+    // updates an existing value
+    // use when you want to ensure a value was set
+    function update(Mapping self, bytes32 key, uint256 value) internal view returns (bool wasSet) {
+        uint256 bucket = uint256(key) % buckets(self);
+        LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Mapping.unwrap(self)).unsafe_get(bucket)));
+        bytes32 element = linkedList.head();
+        bool success = true;
+        while (success) {
+            assembly ("memory-safe") {
+                let elemKey := mload(element)
+                if eq(elemKey, key) {
+                    mstore(add(element, 0x20), value)
+                    wasSet := 1
+                }
+            }
+            if (wasSet) {
+                break;
+            }
+            (success, element) = linkedList.next(element);
+        }
+    }
+
+    // check if map contains key
+    function containsKey(Mapping self, bytes32 key) internal pure returns (bool hasKey) {
+        uint256 bucket = uint256(key) % buckets(self);
+        LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Mapping.unwrap(self)).unsafe_get(bucket)));
+        bytes32 element = linkedList.head();
+        bool success = true;
+        while (success) {
+            assembly ("memory-safe") {
+                let elemKey := mload(element)
+                if eq(elemKey, key) {
+                    hasKey := 1
+                }
+            }
+            if (hasKey) {
+                break;
+            }
+            (success, element) = linkedList.next(element);
+        }
     }
 
     function get(Mapping self, bytes32 key) internal pure returns (bool found, uint256 val) {

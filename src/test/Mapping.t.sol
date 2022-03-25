@@ -47,6 +47,48 @@ contract MappingTest is DSTest, MemoryBrutalizer {
         uint256 g1 = gasleft();
         emit log_named_uint("cost per instantiation: 1", (g0 - g1));
     }
+
+    function testMapCheckedInsertUpdate() public {
+        Mapping map = MappingLib.newMapping(1);
+        map.insert("test1", 1);
+        uint256 g0 = gasleft();
+        map.insert("test1", 2);
+        uint256 g1 = gasleft();
+        (, uint256 val) = map.get("test1");
+        emit log_named_uint("get", val);
+        emit log_named_uint("cost per checked insert short path", (g0 - g1));
+    }
+
+    function testMapCheckedInsert() public {
+        Mapping map = MappingLib.newMapping(1);
+        uint256 g0 = gasleft();
+        map.insert("test1", 2);
+        uint256 g1 = gasleft();
+        (, uint256 val) = map.get("test1");
+        emit log_named_uint("get", val);
+        emit log_named_uint("cost per checked insert short path", (g0 - g1));
+    }
+
+    function testMapUncheckedInsert() public {
+        Mapping map = MappingLib.newMapping(1);
+        uint256 g0 = gasleft();
+        map.insert("test1", 2);
+        uint256 g1 = gasleft();
+        (, uint256 val) = map.get("test1");
+        emit log_named_uint("get", val);
+        emit log_named_uint("cost per unchecked insert", (g0 - g1));
+    }
+
+    function testMapUpdate() public {
+        Mapping map = MappingLib.newMapping(1);
+        map.insert("test1", 1);
+        uint256 g0 = gasleft();
+        map.update("test1", 2);
+        uint256 g1 = gasleft();
+        (, uint256 val) = map.get("test1");
+        emit log_named_uint("get", val);
+        emit log_named_uint("cost per update", (g0 - g1));
+    }
     
     function testMapInstantiationCost5() public {
         uint256 g0 = gasleft();
