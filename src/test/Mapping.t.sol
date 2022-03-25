@@ -4,8 +4,9 @@ pragma solidity 0.8.13;
 import "ds-test/test.sol";
 import "../Mapping.sol";
 import "forge-std/Vm.sol";
+import "./Array.t.sol";
 
-contract MappingTest is DSTest {
+contract MappingTest is DSTest, MemoryBrutalizer {
     Vm vm = Vm(HEVM_ADDRESS);
     using MappingLib for Mapping;
     function setUp() public {}
@@ -75,22 +76,8 @@ contract MappingTest is DSTest {
         emit log_named_uint("cost per instantiation: 100", (g0 - g1) / 100);
     }
 
-    function testFuzzBrutalizeMemoryMap(bytes memory randomBytes, uint16 num) public {
+    function testFuzzBrutalizeMemoryMap(bytes memory randomBytes, uint16 num) public brutalizeMemory(randomBytes) {
         vm.assume(num < 5000);
-        // brutalizes the memory and explicity does not update the free memory pointer 
-        assembly ("memory-safe") {
-            pop(
-                staticcall(
-                    gas(), // pass gas
-                    0x04,  // call identity precompile address 
-                    randomBytes,  // arg offset == pointer to self
-                    mload(randomBytes),  // arg size: length of random bytes
-                    mload(0x40), // set return buffer to free mem ptr
-                    mload(randomBytes)   // identity just returns the bytes of the input so equal to argsize 
-                )
-            )
-        }
-
         Mapping map = createTempMap(50);
         getTempMap(map, 50);
     }

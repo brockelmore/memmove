@@ -3,6 +3,7 @@ pragma solidity 0.8.13;
 
 import "ds-test/test.sol";
 import "../LinkedList.sol";
+import "./Array.t.sol";
 import "forge-std/Vm.sol";
 
 struct U256 {
@@ -10,28 +11,14 @@ struct U256 {
     uint256 next;
 }
 
-contract IndexableLinkedListTest is DSTest {
+contract IndexableLinkedListTest is DSTest, MemoryBrutalizer {
     Vm vm = Vm(HEVM_ADDRESS);
 
     using IndexableLinkedListLib for LinkedList;
     function setUp() public {}
 
-    function testFuzzBrutalizeMemoryILL(bytes memory randomBytes, uint16 num) public {
+    function testFuzzBrutalizeMemoryILL(bytes memory randomBytes, uint16 num) public brutalizeMemory(randomBytes) {
         vm.assume(num < 5000);
-        // brutalizes the memory and explicity does not update the free memory pointer 
-        assembly ("memory-safe") {
-            pop(
-                staticcall(
-                    gas(), // pass gas
-                    0x04,  // call identity precompile address 
-                    randomBytes,  // arg offset == pointer to self
-                    mload(randomBytes),  // arg size: length of random bytes
-                    mload(0x40), // set return buffer to free mem ptr
-                    mload(randomBytes)   // identity just returns the bytes of the input so equal to argsize 
-                )
-            )
-        }
-
         LinkedList pa = IndexableLinkedListLib.newIndexableLinkedList(num);
         uint256 lnum = uint256(num);
         uint256 init = 1337;

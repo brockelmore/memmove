@@ -5,11 +5,37 @@ import "ds-test/test.sol";
 import "../Array.sol";
 import "forge-std/Vm.sol";
 
-contract ArrayTest is DSTest {
+abstract contract MemoryBrutalizer {
+    // brutalizes memory with "temporary" values - good for testing
+    // memory safety in fuzz tests. Explicitly doesn't update
+    // the free memory pointer to simulate compiler generate
+    // temporary values
+    modifier brutalizeMemory(bytes memory brutalizeWith) {
+        assembly ("memory-safe") {
+            pop(
+                staticcall(
+                    gas(), // pass gas
+                    0x04,  // call identity precompile address 
+                    brutalizeWith,  // arg offset == pointer to self
+                    mload(brutalizeWith),  // arg size: length of random bytes
+                    mload(0x40), // set return buffer to free mem ptr
+                    mload(brutalizeWith)   // identity just returns the bytes of the input so equal to argsize 
+                )
+            )
+        }
+
+        _;
+    }
+}
+
+contract ArrayTest is DSTest, MemoryBrutalizer {
     Vm vm = Vm(HEVM_ADDRESS);
 
     using ArrayLib for Array;
     function setUp() public {}
+
+
+
 
     function testArray() public {
         Array pa = ArrayLib.newArray(5);
@@ -30,21 +56,8 @@ contract ArrayTest is DSTest {
         }
     }
 
-    function testFuzzBrutalizeMemory(bytes memory randomBytes, uint16 num) public {
+    function testFuzzBrutalizeMemory(bytes memory randomBytes, uint16 num) public brutalizeMemory(randomBytes) {
         vm.assume(num < 5000);
-        // brutalizes the memory and explicity does not update the free memory pointer 
-        assembly ("memory-safe") {
-            pop(
-                staticcall(
-                    gas(), // pass gas
-                    0x04,  // call identity precompile address 
-                    randomBytes,  // arg offset == pointer to self
-                    mload(randomBytes),  // arg size: length of random bytes
-                    mload(0x40), // set return buffer to free mem ptr
-                    mload(randomBytes)   // identity just returns the bytes of the input so equal to argsize 
-                )
-            )
-        }
 
         Array pa = ArrayLib.newArray(num);
         uint256 lnum = uint256(num);
