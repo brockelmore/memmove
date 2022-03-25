@@ -16,10 +16,15 @@ Soon:
 This software is in *alpha*. There are likely bugs. Testing is relatively limited right now. Use at your own risk
 
 ## Gas costs
+
+Below are some comparisons of Array vs a built in solidity array (`uint256[]`). Where possible a 1:1 comparison
+is made. Otherwise, it is up to the reader to say what is most applicable to compare.
 | op        | Array | Solidity builtin  |
 |-----------|-------|-------------------|
-|set        |  292  |        176        |
-|unsafe_set |  103  |        N/A        |
+|push       |  229  |        N/A        |
+|unsafe_push|  78   |        N/A        |
+|set        |  113  |        75         |
+|unsafe_set |  29   |        N/A        |
 |get        |  123  |        70         |
 |unsafe_get |  48   |        N/A        |
 |length     |  33   |        10         |

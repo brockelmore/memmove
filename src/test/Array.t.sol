@@ -118,8 +118,8 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
 
     // unsafe pushes are cheaper than standard assigns
     function testUnsafeGasEfficiency() public {
-        uint256 g0 = gasleft();
         Array pa = ArrayLib.newArray(1);
+        uint256 g0 = gasleft();
         pa.unsafe_push(125);
         uint256 g1 = gasleft();
         uint256[] memory a = new uint256[](1);
@@ -128,6 +128,30 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         emit log_named_uint("Array gas", g0 - g1);
         emit log_named_uint("builtin gas", g1 - g2);
         emit log_named_uint("delta", (g1 - g2) - (g0 - g1));
+    }
+
+    function testUnsafeSetGasEfficiency() public {
+        uint256[] memory a = new uint256[](1);
+        Array pa = ArrayLib.newArray(1);
+        uint256 g0 = gasleft();
+        pa.unsafe_set(0, 125);
+        uint256 g1 = gasleft();
+        a[0] = 125;
+        uint256 g2 = gasleft();
+        emit log_named_uint("Array gas", g0 - g1);
+        emit log_named_uint("builtin gas", g1 - g2);
+    }
+
+    function testSafeSetGasEfficiency() public {
+        uint256[] memory a = new uint256[](1);
+        Array pa = ArrayLib.newArray(1);
+        uint256 g0 = gasleft();
+        pa.set(0,  125);
+        uint256 g1 = gasleft();
+        a[0] = 125;
+        uint256 g2 = gasleft();
+        emit log_named_uint("Array gas", g0 - g1);
+        emit log_named_uint("builtin gas", g1 - g2);
     }
 
     function testLength() public {
@@ -176,8 +200,8 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
     }
 
     function testSafeGasEfficiency() public {
-        uint256 g0 = gasleft();
         Array pa = ArrayLib.newArray(1);
+        uint256 g0 = gasleft();
         pa = pa.push(125);
         uint256 g1 = gasleft();
         uint256[] memory a = new uint256[](1);
