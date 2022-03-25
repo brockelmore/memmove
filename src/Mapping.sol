@@ -14,16 +14,18 @@ struct Entry {
 }
 
 // A mapping with the following structure:
-// |------------|                      |------------|        |------------|
-// |            |                      | key        |   |--> | key        |   |-> ...      
-// |  bucket 1  | - holds pointer to > | value      |   |    | value      |   |     
-// |            |                      | ptr_to ----|---|    | ptr_to ----|---|
-// |------------|                      |------------|        |------------|
-// |            |
+//                                      |---------------------------------------------------|
+// |------------|                       |  |------------|        |------------|             |
+// |            |                       |  | key        |   |--> | key        |   |-> ...   |   
+// |  bucket 1  | - holds pointer to >  |  | value      |   |    | value      |   |         |
+// |            |                       |  | ptr_to ----|---|    | ptr_to ----|---|         |
+// |------------|                       |  |------------|        |------------|             |
+// |            |                       |---------------------------------------------------|
 // |  bucket 2  | ...
 // |            |
 // |------------|
 // |     ...    |
+// |------------|
 // where the number of buckets is determined by the capacity. The number of buckets is
 // currently static at initialization, but this limitation could be lifted later
 // 
