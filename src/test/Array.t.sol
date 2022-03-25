@@ -130,6 +130,19 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         emit log_named_uint("delta", (g1 - g2) - (g0 - g1));
     }
 
+    function testLength() public {
+        Array pa = ArrayLib.newArray(1);
+        uint256[] memory a = new uint256[](1);
+        pa.unsafe_push(125);
+        uint256 g0 = gasleft();
+        pa.length();
+        uint256 g1 = gasleft();
+        a.length;
+        uint256 g2 = gasleft();
+        emit log_named_uint("Array gas", g0 - g1);
+        emit log_named_uint("builtin gas", g1 - g2);
+    }
+
     function testUnsafeGasEfficiencyGet() public {
         Array pa = ArrayLib.newArray(1);
         pa.unsafe_push(125);

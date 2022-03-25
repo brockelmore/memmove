@@ -15,6 +15,17 @@ Soon:
 ## Warning
 This software is in *alpha*. There are likely bugs. Testing is relatively limited right now. Use at your own risk
 
+## Gas costs
+| op        | Array | Solidity builtin  |
+|-----------|-------|-------------------|
+|set        |  292  |        176        |
+|unsafe_set |  103  |        N/A        |
+|get        |  123  |        70         |
+|unsafe_get |  48   |        N/A        |
+|length     |  33   |        10         |
+
+
+
 ## Example Usage
 ### Array
 ```solidity
