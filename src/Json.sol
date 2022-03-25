@@ -34,7 +34,7 @@ library JsonLib {
 
     error MismatchType();
 
-    function newJson(uint8 capacityHint) internal pure returns (Json s) {
+    function newJson(uint16 capacityHint) internal pure returns (Json s) {
         Mapping map = MappingLib.newMapping(capacityHint);
         s = Json.wrap(Mapping.unwrap(map));
     }

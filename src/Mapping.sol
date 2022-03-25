@@ -37,7 +37,7 @@ library MappingLib {
     using ArrayLib for Array;
     using LinkedListLib for LinkedList;
 
-    function newMapping(uint8 capacityHint) internal pure returns (Mapping s) {
+    function newMapping(uint16 capacityHint) internal pure returns (Mapping s) {
         // memory pointers will never be > 2**128, as that would be 340282366920938463463374607431768211456 bytes of memory
         // which is impossible in the EVM
         Array bucketArray = ArrayLib.newArray(capacityHint);

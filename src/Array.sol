@@ -17,7 +17,7 @@ nominclature:
 a dynamic array is such a primitive data structure that it should be extremely optimized. so everything is in assembly
 */
 library ArrayLib {
-    function newArray(uint8 capacityHint) internal pure returns (Array s) {
+    function newArray(uint16 capacityHint) internal pure returns (Array s) {
         assembly ("memory-safe") {
             // grab free mem ptr
             s := mload(0x40)
@@ -213,7 +213,7 @@ library ArrayLib {
 library RefArrayLib {
     using ArrayLib for Array;
 
-    function newArray(uint8 capacityHint) internal pure returns (Array s) {
+    function newArray(uint16 capacityHint) internal pure returns (Array s) {
         Array referenced = ArrayLib.newArray(capacityHint);
         assembly ("memory-safe") {
             // grab free memory pointer for return value

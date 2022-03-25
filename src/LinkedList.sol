@@ -23,7 +23,7 @@ type LinkedList is bytes32;
 library IndexableLinkedListLib {
     using ArrayLib for Array;
 
-    function newIndexableLinkedList(uint8 capacityHint) internal pure returns (LinkedList s) {
+    function newIndexableLinkedList(uint16 capacityHint) internal pure returns (LinkedList s) {
         s = LinkedList.wrap(Array.unwrap(ArrayLib.newArray(capacityHint)));
     }
 

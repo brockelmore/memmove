@@ -3,8 +3,11 @@ pragma solidity 0.8.13;
 
 import "ds-test/test.sol";
 import "../Array.sol";
+import "forge-std/Vm.sol";
 
 contract ArrayTest is DSTest {
+    Vm vm = Vm(HEVM_ADDRESS);
+
     using ArrayLib for Array;
     function setUp() public {}
 
@@ -24,6 +27,40 @@ contract ArrayTest is DSTest {
         pa = pa.push(135);
         for (uint256 i; i < 11; i++) {
             assertEq(pa.get(i), 125 + i);
+        }
+    }
+
+    function testFuzzBrutalizeMemory(bytes memory randomBytes, uint16 num) public {
+        vm.assume(num < 5000);
+        // brutalizes the memory and explicity does not update the free memory pointer 
+        assembly ("memory-safe") {
+            pop(
+                staticcall(
+                    gas(), // pass gas
+                    0x04,  // call identity precompile address 
+                    randomBytes,  // arg offset == pointer to self
+                    mload(randomBytes),  // arg size: length of random bytes
+                    mload(0x40), // set return buffer to free mem ptr
+                    mload(randomBytes)   // identity just returns the bytes of the input so equal to argsize 
+                )
+            )
+        }
+
+        Array pa = ArrayLib.newArray(num);
+        uint256 lnum = uint256(num);
+        uint256 init = 1337;
+        for (uint256 i;  i < lnum; i++) {
+            pa.unsafe_push(init + i);
+        }
+
+        init = init + num;
+        for (uint256 i;  i < lnum; i++) {
+            pa = pa.push(init + i);
+        }
+
+        init = 1337;
+        for (uint256 i;  i < lnum*2; i++) {
+            assertEq(pa.unsafe_get(i), init + i);
         }
     }
 
