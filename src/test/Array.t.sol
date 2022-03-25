@@ -35,8 +35,6 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
     function setUp() public {}
 
 
-
-
     function testArray() public {
         Array pa = ArrayLib.newArray(5);
         // safe pushes
@@ -45,6 +43,25 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         pa.unsafe_push(127);
         pa.unsafe_push(128);
         pa.unsafe_push(129);
+        pa = pa.push(130);
+        pa = pa.push(131);
+        pa = pa.push(132);
+        pa = pa.push(133);
+        pa = pa.push(134);
+        pa = pa.push(135);
+        for (uint256 i; i < 11; i++) {
+            assertEq(pa.get(i), 125 + i);
+        }
+    }
+
+    function testZeroArray() public {
+        Array pa = ArrayLib.newArray(0);
+        // safe pushes
+        pa = pa.push(125);
+        pa = pa.push(126);
+        pa = pa.push(127);
+        pa = pa.push(128);
+        pa = pa.push(129);
         pa = pa.push(130);
         pa = pa.push(131);
         pa = pa.push(132);
