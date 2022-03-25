@@ -183,6 +183,16 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         emit log_named_uint("builtin gas", g2 - g3);
     }
 
+    function testCreationGas() public {
+        uint256 g0 = gasleft();
+        ArrayLib.newArray(5);
+        uint256 g1 = gasleft();
+        uint256[] memory a = new uint256[](5);
+        uint256 g2 = gasleft();
+        emit log_named_uint("Array gas", g0 - g1);
+        emit log_named_uint("builtin gas", g1 - g2);
+    }
+
     function testSafeGasEfficiencyGet() public {
         Array pa = ArrayLib.newArray(1);
         pa.unsafe_push(125);

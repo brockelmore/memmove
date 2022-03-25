@@ -21,6 +21,7 @@ Below are some comparisons of Array vs a built in solidity array (`uint256[]`). 
 is made. Otherwise, it is up to the reader to say what is most applicable to compare.
 | op        | Array | Solidity builtin  |
 |-----------|-------|-------------------|
+|new(5)     |  75   |        147        |
 |push       |  229  |        N/A        |
 |unsafe_push|  78   |        N/A        |
 |set        |  113  |        75         |
