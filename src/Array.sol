@@ -4,7 +4,6 @@ pragma solidity >=0.8.13 <0.9.0;
 // create a user defined type that is a pointer to memory
 type Array is bytes32;
 
-
 /* 
 Memory layout:
 offset..offset+32: current first unset element (cheaper to have it first most of the time), aka "length"
@@ -170,15 +169,13 @@ library ArrayLib {
 
     // used when you *guarantee* that the index, i, is within the bounds of length
     // NOTE: marked as memory safe, but potentially not memory safe if the safety contract is broken by the caller
-    function unsafe_set(Array self, uint256 i, uint256 value) internal pure returns (uint256 s) {
+    function unsafe_set(Array self, uint256 i, uint256 value) internal pure {
         assembly ("memory-safe") {
             mstore(add(self, mul(0x20, add(0x02, i))), value)
         }
     }
 
-    // used when you *guarantee* that the index, i, is within the bounds of length
-    // NOTE: marked as memory safe, but potentially not memory safe if the safety contract is broken by the caller
-    function set(Array self, uint256 i, uint256 value) internal pure returns (uint256 s) {
+    function set(Array self, uint256 i, uint256 value) internal pure {
     	// if the index is greater than or equal to the capacity, revert
     	if (i >= capacity(self)) revert IndexOutOfBounds();
 
@@ -204,5 +201,99 @@ library ArrayLib {
         assembly ("memory-safe") {
             s := mload(add(self, mul(0x20, add(0x02, i))))
         }
+    } 
+}
+
+// A wrapper around the lower level array that does one layer of indirection so that the pointer
+// the user has to hold never moves. Effectively a reference to the array. i.e. push doesn't return anything
+// because it doesnt need to. Slightly less efficient, generally adds 1-3 memops per func
+library RefArrayLib {
+	using ArrayLib for Array;
+
+	function newArray(uint8 capacityHint) internal pure returns (Array s) {
+		Array referenced = ArrayLib.newArray(capacityHint);
+		assembly ("memory-safe") {
+			// grab free memory pointer for return value
+			s := mload(0x40)
+			// store referenced array in s
+			mstore(mload(0x40), referenced)
+			// update free mem ptr
+			mstore(0x40, add(mload(0x40), 0x20))
+		}
+    }
+
+    // capacity of elements before a move would occur
+    function capacity(Array self) internal pure returns (uint256 cap) {
+    	assembly ("memory-safe") {
+    		cap := mload(add(0x20, mload(self)))
+    	}
+    }
+
+    // number of set elements in the array
+    function length(Array self) internal pure returns (uint256 len) {
+    	assembly ("memory-safe") {
+    		len := mload(mload(self))
+    	}
+    }
+
+    // gets a ptr to an element
+    function unsafe_ptrToElement(Array self, uint256 index) internal pure returns (bytes32 ptr) {
+    	assembly ("memory-safe") {
+    		ptr := add(mload(self), mul(0x20, add(0x02, index)))
+    	}
+    }
+
+    // overloaded to default push function with 0 overallocation
+    function push(Array self, uint256 elem) internal view {
+    	push(self, elem, 0);
+    }
+
+    // dereferences the array
+    function deref(Array self) internal pure returns (Array s) {
+    	assembly ("memory-safe") {
+    		s := mload(self)
+    	}
+    }
+
+    // push an element safely into the array - will perform a move if needed as well as updating the free memory pointer
+    function push(Array self, uint256 elem, uint256 overalloc) internal view {
+        Array newArr = deref(self).push(elem, overalloc);
+        assembly ("memory-safe") {
+        	// compare the new array's pointer to the old pointer (mload(self))
+        	// if the new array is greater than existing, then a move occurred
+        	// in that case, update the reference
+        	if gt(newArr, mload(self)) {
+        		mstore(self, newArr)
+        	}
+        }
+    }
+
+    // used when you *guarantee* that the array has the capacity available to be pushed to.
+    // no need to update return pointer in this case
+    function unsafe_push(Array self, uint256 elem) internal pure {
+    	// no need to update pointer
+        deref(self).unsafe_push(elem);
+    }
+
+    // used when you *guarantee* that the index, i, is within the bounds of length
+    // NOTE: marked as memory safe, but potentially not memory safe if the safety contract is broken by the caller
+    function unsafe_set(Array self, uint256 i, uint256 value) internal pure {
+        deref(self).unsafe_set(i, value);
+    }
+
+    function set(Array self, uint256 i, uint256 value) internal pure {
+        deref(self).set(i, value);
+    }
+
+    // used when you *guarantee* that the index, i, is within the bounds of length
+    // NOTE: marked as memory safe, but potentially not memory safe if the safety contract is broken by the caller
+    function unsafe_get(Array self, uint256 i) internal pure returns (uint256 s) {
+        s = deref(self).unsafe_get(i);
+    }
+
+    error IndexOutOfBounds();
+    // a safe `get` that checks capacity
+    function get(Array self, uint256 i) internal pure returns (uint256 s) {
+    	s = deref(self).get(i);
     } 
 }

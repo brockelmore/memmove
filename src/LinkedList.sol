@@ -12,17 +12,18 @@ type LinkedList is bytes32;
 // is indexable
 //
 // data structure:
-//   |-----------------------------|
-//   |                             v
+//   |-----------------------------|                      |-------|
+//   |                             v                      |       v  
 // [ptr, ptr2, ptr3, ptr4]         {value, other value, next}     {value, other value, next}
 //        |                                                       ^
 //        |-------------------------------------------------------|
+//
 // where `mload(add(ptr, linkingOffset))` (aka `next`) == ptr2
 
 library IndexableLinkedListLib {
 	using ArrayLib for Array;
 
-	function newLinkedList(uint8 capacityHint) internal pure returns (LinkedList s) {
+	function newIndexableLinkedList(uint8 capacityHint) internal pure returns (LinkedList s) {
 		s = LinkedList.wrap(Array.unwrap(ArrayLib.newArray(capacityHint)));
     }
 
@@ -100,9 +101,8 @@ library LinkedListLib {
 	uint256 constant TAIL_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000;
 
 	function newLinkedList(uint80 linkingOffset) internal pure returns (LinkedList s) {
-		bytes32 t = bytes32(uint256(linkingOffset) << 176);
 		assembly ("memory-safe") {
-			s := t
+			s := shl(176, linkingOffset)
 		}
     }
 

@@ -93,6 +93,26 @@ library JsonLib {
 		}
 	}
 
+	function checkType(Json self, bytes32 key) internal pure returns (bool found, JsonType t) {
+		uint256 bucket = uint256(key) % buckets(self);
+		LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Json.unwrap(self)).unsafe_get(bucket)));
+		bytes32 element = linkedList.head();
+		bool success = true;
+		while (success) {
+			assembly ("memory-safe") {
+				let elemKey := mload(element)
+				if eq(elemKey, key) {
+					t   := mload(add(element, 0x60))
+					found := 1
+				}
+			}
+			if (found) {
+				break;
+			}
+			(success, element) = linkedList.next(element);
+		}
+	}
+
 	function getString(Json self, bytes32 key) internal pure returns (bool found, string memory str) {
 		(bool exists, uint256 str_ptr) = get(self, key, JsonType.STRING);
 		assembly ("memory-safe") {

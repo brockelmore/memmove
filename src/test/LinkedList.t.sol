@@ -9,12 +9,12 @@ struct U256 {
     uint256 next;
 }
 
-contract LinkedListTest is DSTest {
+contract IndexableLinkedListTest is DSTest {
     using IndexableLinkedListLib for LinkedList;
     function setUp() public {}
 
     function testLinkedList() public {
-        LinkedList pa = LinkedListLib.newLinkedList(5);
+        LinkedList pa = IndexableLinkedListLib.newIndexableLinkedList(5);
         U256 memory a = U256({value: 100, next: 0});
         pa = pa.push_no_link(pointer(a));
         for (uint256 i; i < 6; i++) {
