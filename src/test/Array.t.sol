@@ -187,7 +187,7 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         uint256 g0 = gasleft();
         ArrayLib.newArray(5);
         uint256 g1 = gasleft();
-        uint256[] memory a = new uint256[](5);
+        new uint256[](5);
         uint256 g2 = gasleft();
         emit log_named_uint("Array gas", g0 - g1);
         emit log_named_uint("builtin gas", g1 - g2);

@@ -64,32 +64,116 @@ library JsonLib {
         buckets = Array.wrap(Json.unwrap(self)).capacity();
     }
 
+    function insert(Json self, bytes32 key, Array value) internal view {
+        insert(self, key, Array.unwrap(value), JsonType.ARRAY);
+    }
+
+    function insert(Json self, bytes32 key, Mapping value) internal view {
+        insert(self, key, Mapping.unwrap(value), JsonType.OBJECT);
+    }
+
+    function insert(Json self, bytes32 key, Json value) internal view {
+        insert(self, key, Json.unwrap(value), JsonType.OBJECT);
+    }
+
+    function insert(Json self, bytes32 key, uint256 value) internal view {
+        insert(self, key, bytes32(value), JsonType.NUMBER);
+    }
+
+    function insert(Json self, bytes32 key, string memory value) internal view {
+        insert(self, key, pointer(value), JsonType.STRING);
+    }
+
+    function insert(Json self, bytes32 key, bytes memory value) internal view {
+        insert(self, key, pointer(value), JsonType.STRING);
+    }
+
+    function pointer(string memory a) internal view returns(bytes32 ptr) {
+        assembly {
+            ptr := a
+        }
+    }
+
+    function pointer(bytes memory a) internal view returns(bytes32 ptr) {
+        assembly {
+            ptr := a
+        }
+    }
+    
+
+    function insert(Json self, bytes32 key, bytes32 value, JsonType encodingType) internal view {
+        uint256 bucket = uint256(key) % buckets(self);
+
+        LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Json.unwrap(self)).unsafe_get(bucket)));
+        bytes32 element = linkedList.head();
+        bool success = true;
+        if (element != bytes32(0)) {
+            while (success) {
+                bool wasSet;
+                assembly ("memory-safe") {
+                    let elemKey := mload(element)
+                    if eq(elemKey, key) {
+                        mstore(add(element, 0x20), value)
+                        // change encoding type if necessary
+                        if iszero(eq(mload(add(element, 0x60)), encodingType)) {
+                            mstore(add(element, 0x60), encodingType)
+                        }
+                        wasSet := 1
+                    }
+                }
+                if (wasSet) {
+                    return;
+                }
+                (success, element) = linkedList.next(element);
+            }
+        }
+
+        // if we have reached here, the key is not present, add it
+        JsonEntry memory entry = JsonEntry({
+            key: key,
+            value: bytes32(value),
+            next: bytes32(0),
+            encodingType: encodingType
+        });
+        bytes32 entryPtr;
+
+        assembly ("memory-safe") {
+            entryPtr := entry
+        }
+
+        // Safety:
+        //  1. since buckets is guaranteed to be the capacity, we are able to make this unsafe_get
+        Array.wrap(Json.unwrap(self)).unsafe_set(bucket, uint256(LinkedList.unwrap(linkedList.push_and_link(entryPtr))));
+    }
+
     function get(Json self, bytes32 key, JsonType expectedType) internal pure returns (bool found, uint256 val) {
         uint256 bucket = uint256(key) % buckets(self);
         LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Json.unwrap(self)).unsafe_get(bucket)));
         bytes32 element = linkedList.head();
         bool success = true;
-        while (success) {
-            assembly ("memory-safe") {
-                let elemKey := mload(element)
-                if eq(elemKey, key) {
-                    val   := mload(add(element, 0x20))
-                    found := 1
-                }
-            }
-            if (found) {
-                if (expectedType != JsonType.ANY) {
-                    JsonType encodedType;
-                    assembly ("memory-safe") {
-                        encodedType := mload(add(element, 0x60))
+        if (element != bytes32(0)) {
+            while (success) {
+                assembly ("memory-safe") {
+                    let elemKey := mload(element)
+                    if eq(elemKey, key) {
+                        val   := mload(add(element, 0x20))
+                        found := 1
                     }
-                    
-                    if (encodedType != expectedType) revert MismatchType();
                 }
+                if (found) {
+                    if (expectedType != JsonType.ANY) {
+                        JsonType encodedType;
+                        assembly ("memory-safe") {
+                            encodedType := mload(add(element, 0x60))
+                        }
+                        
+                        if (encodedType != expectedType) revert MismatchType();
+                    }
 
-                break;
+                    break;
+                }
+                (success, element) = linkedList.next(element);
             }
-            (success, element) = linkedList.next(element);
         }
     }
 

@@ -85,19 +85,21 @@ library MappingLib {
         LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Mapping.unwrap(self)).unsafe_get(bucket)));
         bytes32 element = linkedList.head();
         bool success = true;
-        while (success) {
-            bool wasSet;
-            assembly ("memory-safe") {
-                let elemKey := mload(element)
-                if eq(elemKey, key) {
-                    mstore(add(element, 0x20), value)
-                    wasSet := 1
+        if (element != bytes32(0)) {
+            while (success) {
+                bool wasSet;
+                assembly ("memory-safe") {
+                    let elemKey := mload(element)
+                    if eq(elemKey, key) {
+                        mstore(add(element, 0x20), value)
+                        wasSet := 1
+                    }
                 }
+                if (wasSet) {
+                    return;
+                }
+                (success, element) = linkedList.next(element);
             }
-            if (wasSet) {
-                return;
-            }
-            (success, element) = linkedList.next(element);
         }
 
         // if we have reached here, the key is not present, add it
@@ -145,17 +147,19 @@ library MappingLib {
         LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Mapping.unwrap(self)).unsafe_get(bucket)));
         bytes32 element = linkedList.head();
         bool success = true;
-        while (success) {
-            assembly ("memory-safe") {
-                let elemKey := mload(element)
-                if eq(elemKey, key) {
-                    hasKey := 1
+        if (element != bytes32(0)) {
+            while (success) {
+                assembly ("memory-safe") {
+                    let elemKey := mload(element)
+                    if eq(elemKey, key) {
+                        hasKey := 1
+                    }
                 }
+                if (hasKey) {
+                    break;
+                }
+                (success, element) = linkedList.next(element);
             }
-            if (hasKey) {
-                break;
-            }
-            (success, element) = linkedList.next(element);
         }
     }
 
@@ -164,18 +168,20 @@ library MappingLib {
         LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Mapping.unwrap(self)).unsafe_get(bucket)));
         bytes32 element = linkedList.head();
         bool success = true;
-        while (success) {
-            assembly ("memory-safe") {
-                let elemKey := mload(element)
-                if eq(elemKey, key) {
-                    val   := mload(add(element, 0x20))
-                    found := 1
+        if (element != bytes32(0)) {
+            while (success) {
+                assembly ("memory-safe") {
+                    let elemKey := mload(element)
+                    if eq(elemKey, key) {
+                        val   := mload(add(element, 0x20))
+                        found := 1
+                    }
                 }
+                if (found) {
+                    break;
+                }
+                (success, element) = linkedList.next(element);
             }
-            if (found) {
-                break;
-            }
-            (success, element) = linkedList.next(element);
         }
     }
 }

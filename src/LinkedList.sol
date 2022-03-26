@@ -161,8 +161,8 @@ library LinkedListLib {
                 s := or(and(self, TAIL_MASK), shl(16, element))
             }
             default {
-                // no head
-                s := or(self, shl(96, element))
+                // no head, set element as head and tail
+                s := or(or(self, shl(96, element)), shl(16, element))
             }
         }
     }
