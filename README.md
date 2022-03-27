@@ -7,6 +7,7 @@
 1. Dynamically sized in-memory [linked lists](src/LinkedList.sol#L99)
 1. Dynamically sized in-memory [indexable linked lists](src/LinkedList.sol#L21)
 1. Dynamically sized in-memory [mappings](src/Mapping.sol#L36)
+1. Dynamically sized in-memory [doubly linked lists](src/DoublyLinkedList.sol#L36)
 
 Soon:
 1. Dynamically sized in-memory [Json](src/Json.sol#L30)
