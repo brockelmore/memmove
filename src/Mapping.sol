@@ -48,15 +48,15 @@ library MappingLib {
         s = Mapping.wrap(Array.unwrap(bucketArray));
     }
 
-    function buckets(Mapping self) internal pure returns (uint256 buckets) {
-        buckets = Array.wrap(Mapping.unwrap(self)).capacity();
+    function buckets(Mapping self) internal pure returns (uint256 _buckets) {
+        _buckets = Array.wrap(Mapping.unwrap(self)).capacity();
     }
 
     // since we never resize the buckets array, the mapping itself can never move out from under us
     // does a raw insert - it does *not* check for the presence of the key already in the map
     //
     // use `update` if you know a key already exists
-    function uncheckedInsert(Mapping self, bytes32 key, uint256 value) internal view {
+    function uncheckedInsert(Mapping self, bytes32 key, uint256 value) internal pure {
         uint256 bucket = uint256(key) % buckets(self);
 
         Entry memory entry = Entry({
@@ -79,7 +79,7 @@ library MappingLib {
     // since we never resize the buckets array, the mapping itself can never move out from under us
     // does a raw insert - it *does* check for the presence of the key already in the map and will update it
     // if it exists
-    function insert(Mapping self, bytes32 key, uint256 value) internal view {
+    function insert(Mapping self, bytes32 key, uint256 value) internal pure {
         uint256 bucket = uint256(key) % buckets(self);
 
         LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Mapping.unwrap(self)).unsafe_get(bucket)));
@@ -121,7 +121,7 @@ library MappingLib {
 
     // updates an existing value
     // use when you want to ensure a value was set
-    function update(Mapping self, bytes32 key, uint256 value) internal view returns (bool wasSet) {
+    function update(Mapping self, bytes32 key, uint256 value) internal pure returns (bool wasSet) {
         uint256 bucket = uint256(key) % buckets(self);
         LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Mapping.unwrap(self)).unsafe_get(bucket)));
         bytes32 element = linkedList.head();

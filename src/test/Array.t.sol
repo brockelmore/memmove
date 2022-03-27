@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import "ds-test/test.sol";
 import "../Array.sol";
 import "forge-std/Vm.sol";
+import "forge-std/stdlib.sol";
 
 abstract contract MemoryBrutalizer {
     // brutalizes memory with "temporary" values - good for testing
@@ -71,6 +72,12 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         for (uint256 i; i < 11; i++) {
             assertEq(pa.get(i), 125 + i);
         }
+    }
+
+    function testBuiltInPanic() public {
+        Array pa = ArrayLib.newArray(0);
+        vm.expectRevert(stdError.indexOOBError);
+        pa.set(1, 0);
     }
 
     function testFuzzBrutalizeMemory(bytes memory randomBytes, uint16 num) public brutalizeMemory(randomBytes) {
@@ -171,13 +178,13 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         Array pa = ArrayLib.newArray(1);
         pa.unsafe_push(125);
         uint256 g0 = gasleft();
-        uint256 b = pa.unsafe_get(0);
+        pa.unsafe_get(0);
         uint256 g1 = gasleft();
         
         uint256[] memory a = new uint256[](1);
         a[0] = 125;
         uint256 g2 = gasleft();
-        uint256 c = a[0];
+        a[0];
         uint256 g3 = gasleft();
         emit log_named_uint("Array gas", g0 - g1);
         emit log_named_uint("builtin gas", g2 - g3);
@@ -187,8 +194,9 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         uint256 g0 = gasleft();
         ArrayLib.newArray(5);
         uint256 g1 = gasleft();
-        new uint256[](5);
+        uint256[] memory a = new uint256[](5);
         uint256 g2 = gasleft();
+        a[0] = 1;
         emit log_named_uint("Array gas", g0 - g1);
         emit log_named_uint("builtin gas", g1 - g2);
     }
@@ -197,13 +205,13 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         Array pa = ArrayLib.newArray(1);
         pa.unsafe_push(125);
         uint256 g0 = gasleft();
-        uint256 b = pa.get(0);
+        pa.get(0);
         uint256 g1 = gasleft();
         
         uint256[] memory a = new uint256[](1);
         a[0] = 125;
         uint256 g2 = gasleft();
-        uint256 c = a[0];
+        a[0];
         uint256 g3 = gasleft();
         emit log_named_uint("Array gas", g0 - g1);
         emit log_named_uint("builtin gas", g2 - g3);
@@ -284,13 +292,13 @@ contract RefArrayTest is DSTest {
         Array pa = RefArrayLib.newArray(1);
         pa.unsafe_push(125);
         uint256 g0 = gasleft();
-        uint256 b = pa.unsafe_get(0);
+        pa.unsafe_get(0);
         uint256 g1 = gasleft();
         
         uint256[] memory a = new uint256[](1);
         a[0] = 125;
         uint256 g2 = gasleft();
-        uint256 c = a[0];
+        a[0];
         uint256 g3 = gasleft();
         emit log_named_uint("Array gas", g0 - g1);
         emit log_named_uint("builtin gas", g2 - g3);
@@ -300,13 +308,13 @@ contract RefArrayTest is DSTest {
         Array pa = RefArrayLib.newArray(1);
         pa.unsafe_push(125);
         uint256 g0 = gasleft();
-        uint256 b = pa.get(0);
+        pa.get(0);
         uint256 g1 = gasleft();
         
         uint256[] memory a = new uint256[](1);
         a[0] = 125;
         uint256 g2 = gasleft();
-        uint256 c = a[0];
+        a[0];
         uint256 g3 = gasleft();
         emit log_named_uint("Array gas", g0 - g1);
         emit log_named_uint("builtin gas", g2 - g3);

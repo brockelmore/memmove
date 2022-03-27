@@ -47,16 +47,16 @@ library IndexableLinkedListLib {
     function push_and_link(LinkedList self, bytes32 element, uint256 linkingOffset) internal view returns (LinkedList s) {
         Array asArray = Array.wrap(LinkedList.unwrap(self));
 
-        uint256 length = asArray.length();
-        if (length == 0) {
+        uint256 len = asArray.length();
+        if (len == 0) {
             // nothing to link to
             Array arrayS = asArray.push(uint256(element), 3);
             s = LinkedList.wrap(Array.unwrap(arrayS));
         } else {
             // over alloc by 3
             Array arrayS = asArray.push(uint256(element), 3);
-            uint256 newPtr = arrayS.unsafe_get(length);
-            uint256 lastPtr = arrayS.unsafe_get(length - 1);
+            uint256 newPtr = arrayS.unsafe_get(len);
+            uint256 lastPtr = arrayS.unsafe_get(len - 1);
             
             // link the previous element with the new element
             assembly ("memory-safe") {
@@ -67,7 +67,7 @@ library IndexableLinkedListLib {
         }
     }
 
-    function next(LinkedList self, bytes32 element, uint256 linkingOffset) internal pure returns (bool exists, bytes32 elem) {
+    function next(LinkedList /*self*/, bytes32 element, uint256 linkingOffset) internal pure returns (bool exists, bytes32 elem) {
         assembly ("memory-safe") {
             elem := mload(add(element, linkingOffset))
             exists := gt(elem, 0x00)
@@ -100,9 +100,9 @@ library LinkedListLib {
     uint256 constant HEAD_MASK = 0xFFFFFFFFFFFFFFFFFFFF00000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF;
     uint256 constant TAIL_MASK = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000;
 
-    function newLinkedList(uint80 linkingOffset) internal pure returns (LinkedList s) {
+    function newLinkedList(uint80 _linkingOffset) internal pure returns (LinkedList s) {
         assembly ("memory-safe") {
-            s := shl(176, linkingOffset)
+            s := shl(176, _linkingOffset)
         }
     }
 
@@ -124,7 +124,7 @@ library LinkedListLib {
         }
     }
 
-    function set_head(LinkedList self, bytes32 element) internal view returns (LinkedList s) {
+    function set_head(LinkedList self, bytes32 element) internal pure returns (LinkedList s) {
         assembly ("memory-safe") {
             s := or(and(self, HEAD_MASK), shl(96, element))
         }
@@ -144,7 +144,7 @@ library LinkedListLib {
         }
     }
 
-    function push_and_link(LinkedList self, bytes32 element) internal view returns (LinkedList s) {
+    function push_and_link(LinkedList self, bytes32 element) internal pure returns (LinkedList s) {
         assembly ("memory-safe") {
             switch gt(shr(176, shl(80, self)), 0) 
             case 1 {

@@ -55,13 +55,13 @@ contract JsonTest is DSTest {
         }
     }
 
-    function pointer(string memory a) internal view returns(bytes32 ptr) {
+    function pointer(string memory a) internal pure returns(bytes32 ptr) {
         assembly {
             ptr := a
         }
     }
 
-    function pointer(bytes memory a) internal view returns(bytes32 ptr) {
+    function pointer(bytes memory a) internal pure returns(bytes32 ptr) {
         assembly {
             ptr := a
         }

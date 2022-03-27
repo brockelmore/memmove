@@ -61,7 +61,7 @@ library ArrayLib {
     // overloaded to default push function with 0 overallocation
     function push(Array self, uint256 elem) internal view returns (Array ret) {
         ret = push(self, elem, 0);
-    } 
+    }
 
     // push an element safely into the array - will perform a move if needed as well as updating the free memory pointer
     // returns the new pointer.
@@ -180,9 +180,13 @@ library ArrayLib {
 
     function set(Array self, uint256 i, uint256 value) internal pure {
         // if the index is greater than or equal to the capacity, revert
-        if (i >= capacity(self)) revert IndexOutOfBounds();
-
         assembly ("memory-safe") {
+            if lt(mload(add(0x20, self)), i) {
+                // emit compiler native Panic(uint256) style error
+                mstore(0x00, 0x4e487b7100000000000000000000000000000000000000000000000000000000)
+                mstore(0x04, 0x32)
+                revert(0, 0x24)
+            }
             mstore(add(self, mul(0x20, add(0x02, i))), value)
         }
     }
@@ -195,13 +199,16 @@ library ArrayLib {
         }
     }
 
-    error IndexOutOfBounds();
     // a safe `get` that checks capacity
     function get(Array self, uint256 i) internal pure returns (uint256 s) {
         // if the index is greater than or equal to the capacity, revert
-        if (i >= capacity(self)) revert IndexOutOfBounds();
-
         assembly ("memory-safe") {
+            if lt(mload(add(0x20, self)), i) {
+                // emit compiler native Panic(uint256) style error
+                mstore(0x00, 0x4e487b7100000000000000000000000000000000000000000000000000000000)
+                mstore(0x04, 0x32)
+                revert(0, 0x24)
+            }
             s := mload(add(self, mul(0x20, add(0x02, i))))
         }
     } 
@@ -291,9 +298,8 @@ library RefArrayLib {
         s = deref(self).unsafe_get(i);
     }
 
-    error IndexOutOfBounds();
     // a safe `get` that checks capacity
     function get(Array self, uint256 i) internal pure returns (uint256 s) {
         s = deref(self).get(i);
-    } 
+    }
 }

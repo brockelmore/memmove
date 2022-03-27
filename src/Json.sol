@@ -39,7 +39,7 @@ library JsonLib {
         s = Json.wrap(Mapping.unwrap(map));
     }
 
-    function insert(Json self, bytes32 key, uint256 value, JsonType encodingType) internal view {
+    function uncheckedInsert(Json self, bytes32 key, uint256 value, JsonType encodingType) internal pure {
         uint256 bucket = uint256(key) % buckets(self);
 
         JsonEntry memory entry = JsonEntry({
@@ -60,48 +60,48 @@ library JsonLib {
         Array.wrap(Json.unwrap(self)).unsafe_set(bucket, uint256(LinkedList.unwrap(linkedList.push_and_link(entryPtr))));
     }
 
-    function buckets(Json self) internal pure returns (uint256 buckets) {
-        buckets = Array.wrap(Json.unwrap(self)).capacity();
+    function buckets(Json self) internal pure returns (uint256 _buckets) {
+        _buckets = Array.wrap(Json.unwrap(self)).capacity();
     }
 
-    function insert(Json self, bytes32 key, Array value) internal view {
+    function insert(Json self, bytes32 key, Array value) internal pure {
         insert(self, key, Array.unwrap(value), JsonType.ARRAY);
     }
 
-    function insert(Json self, bytes32 key, Mapping value) internal view {
+    function insert(Json self, bytes32 key, Mapping value) internal pure {
         insert(self, key, Mapping.unwrap(value), JsonType.OBJECT);
     }
 
-    function insert(Json self, bytes32 key, Json value) internal view {
+    function insert(Json self, bytes32 key, Json value) internal pure {
         insert(self, key, Json.unwrap(value), JsonType.OBJECT);
     }
 
-    function insert(Json self, bytes32 key, uint256 value) internal view {
+    function insert(Json self, bytes32 key, uint256 value) internal pure {
         insert(self, key, bytes32(value), JsonType.NUMBER);
     }
 
-    function insert(Json self, bytes32 key, string memory value) internal view {
+    function insert(Json self, bytes32 key, string memory value) internal pure {
         insert(self, key, pointer(value), JsonType.STRING);
     }
 
-    function insert(Json self, bytes32 key, bytes memory value) internal view {
+    function insert(Json self, bytes32 key, bytes memory value) internal pure {
         insert(self, key, pointer(value), JsonType.STRING);
     }
 
-    function pointer(string memory a) internal view returns(bytes32 ptr) {
+    function pointer(string memory a) internal pure returns (bytes32 ptr) {
         assembly {
             ptr := a
         }
     }
 
-    function pointer(bytes memory a) internal view returns(bytes32 ptr) {
+    function pointer(bytes memory a) internal pure returns (bytes32 ptr) {
         assembly {
             ptr := a
         }
     }
     
 
-    function insert(Json self, bytes32 key, bytes32 value, JsonType encodingType) internal view {
+    function insert(Json self, bytes32 key, bytes32 value, JsonType encodingType) internal pure {
         uint256 bucket = uint256(key) % buckets(self);
 
         LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Json.unwrap(self)).unsafe_get(bucket)));
@@ -150,8 +150,8 @@ library JsonLib {
         uint256 bucket = uint256(key) % buckets(self);
         LinkedList linkedList = LinkedList.wrap(bytes32(Array.wrap(Json.unwrap(self)).unsafe_get(bucket)));
         bytes32 element = linkedList.head();
-        bool success = true;
         if (element != bytes32(0)) {
+            bool success = true;
             while (success) {
                 assembly ("memory-safe") {
                     let elemKey := mload(element)
@@ -244,7 +244,7 @@ library JsonLib {
         (found, val) = get(self, key, JsonType.ANY);
     }
 
-    function fromStr(Json self, string memory json_str) internal pure returns (Json s) {
+    function fromStr(Json self, string memory /*json_str*/) internal pure returns (Json s) {
         // TODO: parse the json into an instantiated json type (improves performance because we have a capacity hint at json creation)
         s = self;
     }
