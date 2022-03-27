@@ -20,7 +20,7 @@ type DoublyLinkedList is bytes32;
 //
 // where `mload(add(ptr, linkingOffset))` (aka `next`) == ptr2
 
-library IndexableLinkedListLib {
+library IndexableDoublyLinkedListLib {
     using ArrayLib for Array;
 
     function newIndexableDoublyLinkedList(uint16 capacityHint) internal pure returns (DoublyLinkedList s) {
@@ -94,12 +94,12 @@ library IndexableLinkedListLib {
 // the only way to traverse is to start at head and iterate via `next`. More memory efficient, better for maps
 //
 // data structure:
-//   |-------------------------tail----------------------------|
-//   |head|                                           |--------|
-//   |    v                                           |        v
-//  head, dataStruct{.., next} }     dataStruct{.., next}     dataStruct{.., next}
-//                          |          ^
-//                          |----------|
+//   |-------------------------tail---------------------------------|
+//   |head|-------------------------------------------|     |-------|
+//   |    v                                           |     |       v
+//  head, dataStruct{.., next} }     dataStruct{.., prev, next}     dataStruct{.., next}
+//                          |        ^
+//                          |--------|
 //
 // `head` is a packed word split as 40, 40, 80, 80 of backward & forward linking offset, ptr to first element, ptr to last element
 // `head` *isn't* stored in memory because it fits in a word 
@@ -110,7 +110,7 @@ library DoublyLinkedListLib {
 
     function newDoublyLinkedList(uint40 _backwardLinkingOffset, uint40 _forwardLinkingOffset) internal pure returns (DoublyLinkedList s) {
         assembly ("memory-safe") {
-            s := shl(176, and(shl(40, _backwardLinkingOffset), _forwardLinkingOffset))
+            s := shl(176, or(shl(40, _backwardLinkingOffset), _forwardLinkingOffset))
         }
     }
 
@@ -128,13 +128,13 @@ library DoublyLinkedListLib {
 
     function forwardLinkingOffset(DoublyLinkedList s) internal pure returns (uint80 offset) {
         assembly ("memory-safe") {
-            offset := shr(176, shl(40, s))
+            offset := shr(216, shl(40, s))
         }
     }
 
     function backwardLinkingOffset(DoublyLinkedList s) internal pure returns (uint80 offset) {
         assembly ("memory-safe") {
-            offset := shr(176, s)
+            offset := shr(216, s)
         }
     }
 
@@ -151,14 +151,14 @@ library DoublyLinkedListLib {
             mstore(
                 add(
                     prevElem,
-                    shr(176, shl(40, self)) // add the offset size to get `next`
+                    shr(216, shl(40, self)) // add the offset size to get `next`
                 ),
                 nextElem
             )
             mstore(
                 add(
                     nextElem,
-                    shr(176, self) // add the offset size to get `next`
+                    shr(216, self) // add the offset size to get `next`
                 ),
                 prevElem
             )
@@ -169,11 +169,12 @@ library DoublyLinkedListLib {
         assembly ("memory-safe") {
             switch gt(shr(176, shl(80, self)), 0) 
             case 1 {
+                let tailElement := shr(176, shl(160, self))
                 // store the new element as the `next` ptr for the tail
                 mstore(
                     add(
-                        shr(176, shl(160, self)), // get the tail ptr
-                        shr(176, shl(40, self))   // add the forward linking offset size to get `next`
+                        tailElement,
+                        shr(216, shl(40, self)) // get forwardLinkingOffset 
                     ),
                     element
                 )
@@ -182,9 +183,9 @@ library DoublyLinkedListLib {
                 mstore(
                     add(
                         element,
-                        shr(176, self) // add the backward linking offset size to get `next`
+                        shr(216, self)
                     ),
-                    shr(176, shl(160, self)) // grab current tail pointer
+                    tailElement
                 )
 
                 // update the tail ptr
@@ -199,14 +200,14 @@ library DoublyLinkedListLib {
 
     function next(DoublyLinkedList self, bytes32 element) internal pure returns (bool exists, bytes32 elem) {
         assembly ("memory-safe") {
-            elem := mload(add(element, shr(176, shl(40, self))))
+            elem := mload(add(element, shr(216, shl(40, self))))
             exists := gt(elem, 0x00)
         }
     }
 
     function previous(DoublyLinkedList self, bytes32 element) internal pure returns (bool exists, bytes32 elem) {
         assembly ("memory-safe") {
-            elem := mload(add(element, shr(176, self)))
+            elem := mload(add(element, shr(216, self)))
             exists := gt(elem, 0x00)
         }
     }
