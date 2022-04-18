@@ -3,8 +3,11 @@ pragma solidity 0.8.13;
 
 import "ds-test/test.sol";
 import "../Array.sol";
-import "forge-std/Vm.sol";
-import "forge-std/stdlib.sol";
+import "./Vm.sol";
+
+library stdError {
+    bytes public constant indexOOBError = abi.encodeWithSignature("Panic(uint256)", 0x32);
+}
 
 abstract contract MemoryBrutalizer {
     // brutalizes memory with "temporary" values - good for testing

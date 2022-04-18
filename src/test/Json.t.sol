@@ -4,7 +4,7 @@ pragma solidity 0.8.13;
 import "ds-test/test.sol";
 import "../Json.sol";
 import "../Array.sol";
-import "forge-std/Vm.sol";
+import "./Vm.sol";
 
 contract JsonTest is DSTest {
     Vm vm = Vm(HEVM_ADDRESS);

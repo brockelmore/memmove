@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import "ds-test/test.sol";
 import "../Mapping.sol";
-import "forge-std/Vm.sol";
+import "./Vm.sol";
 import "./Array.t.sol";
 
 contract MappingTest is DSTest, MemoryBrutalizer {
