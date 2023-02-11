@@ -61,4 +61,7 @@ interface Vm {
     function label(address, string calldata) external;
     // If the condition is false, discard this run's fuzz inputs and generate new ones
     function assume(bool) external;
+
+    function pauseGasMetering() external;
+    function resumeGasMetering() external;
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import "ds-test/test.sol";
 import "../Array.sol";
@@ -38,6 +38,18 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
     using ArrayLib for Array;
     function setUp() public {}
 
+    function test_100k() public {
+        vm.pauseGasMetering();
+        Array pa = ArrayLib.newArray(100_000);
+        for (uint256 i = 1; i <= 100_000; i++) {
+            pa.unsafe_set(i, i);
+        }
+
+        vm.resumeGasMetering();
+
+        pa.pop();
+
+    }
 
     function testArray() public {
         Array pa = ArrayLib.newArray(5);
@@ -124,6 +136,15 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         for (uint256 i; i < 11; i++) {
             assertEq(pa.get(i), 125 + i);
         }
+    }
+
+    function testFuzz_UnsafeGet_gas(uint256 a) public {
+        Array pa = ArrayLib.newArray(1);
+        pa.unsafe_push(a);
+        uint256 g0 = gasleft();
+        pa.unsafe_get(0);
+        uint256 g1 = gasleft();
+        emit log_named_uint("Array gas", g0 - g1);
     }
 
     // unsafe pushes are cheaper than standard assigns

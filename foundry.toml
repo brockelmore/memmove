@@ -1,4 +1,4 @@
-[default]
+[profile.default]
 src = 'src'
 out = 'out'
 libs = ['lib']
@@ -7,9 +7,9 @@ fuzz_runs = 1
 optimizer_runs = 1000000
 
 # while this reduces gas for this contract, its still a bit iffy for regular solidity
-viaIR = false
+viaIR = true
 
-[ci]
+[profile.ci]
 fuzz_runs = 10000
 
 # See more config options https://github.com/gakonst/foundry/tree/master/config

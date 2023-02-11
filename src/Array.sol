@@ -17,7 +17,7 @@ nominclature:
 a dynamic array is such a primitive data structure that it should be extremely optimized. so everything is in assembly
 */
 library ArrayLib {
-    function newArray(uint16 capacityHint) internal pure returns (Array s) {
+    function newArray(uint256 capacityHint) internal pure returns (Array s) {
         assembly ("memory-safe") {
             // grab free mem ptr
             s := mload(0x40)
@@ -210,6 +210,17 @@ library ArrayLib {
                 revert(0, 0x24)
             }
             s := mload(add(self, mul(0x20, add(0x02, i))))
+        }
+    }
+
+    // a safe `get` that checks capacity
+    function pop(Array self) internal pure returns (uint256 s) {
+        // if the index is greater than or equal to the capacity, revert
+        assembly ("memory-safe") {
+            let cap := mload(self)
+            let last := add(self, mul(0x20, add(0x02, cap)))
+            s := mload(last)
+            mstore(last, 0x00)
         }
     } 
 }
