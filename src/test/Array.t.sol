@@ -42,13 +42,32 @@ contract ArrayTest is DSTest, MemoryBrutalizer {
         vm.pauseGasMetering();
         Array pa = ArrayLib.newArray(100_000);
         for (uint256 i = 1; i <= 100_000; i++) {
-            pa.unsafe_set(i, i);
+            pa.unsafe_set(i - 1, i);
         }
 
         vm.resumeGasMetering();
 
-        pa.pop();
+        uint256 ret = pa.pop();
+        assertEq(ret, 100_000);
 
+    }
+
+    function test_100kMetered() public {
+        Array pa = ArrayLib.newArray(100_000);
+        for (uint256 i = 1; i <= 100_000; i++) {
+            pa.unsafe_set(i - 1, i);
+        }
+
+        uint256 ret = pa.pop();
+        assertEq(ret, 100_000);
+    }
+
+    function test_pop() public {
+        Array pa = ArrayLib.newArray(1);
+        pa.unsafe_set(0, 1);
+
+        uint256 ret = pa.pop();
+        assertEq(ret, 1);
     }
 
     function testArray() public {

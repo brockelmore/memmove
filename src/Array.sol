@@ -213,12 +213,10 @@ library ArrayLib {
         }
     }
 
-    // a safe `get` that checks capacity
     function pop(Array self) internal pure returns (uint256 s) {
-        // if the index is greater than or equal to the capacity, revert
         assembly ("memory-safe") {
-            let cap := mload(self)
-            let last := add(self, mul(0x20, add(0x02, cap)))
+            let len := mload(self)
+            let last := add(self, mul(0x20, add(0x01, len)))
             s := mload(last)
             mstore(last, 0x00)
         }
