@@ -1,0 +1,15 @@
+{
+  "name": "memmove",
+  "version": "0.1.0",
+  "description": "A data structures library that does memory management for you",
+  "bugs": "https://github.com/brockelmore/memmove/issues",
+  "license": "MIT",
+  "author": "Contributors to memmove",
+  "files": [
+    "src/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brockelmore/memmove.git"
+  }
+}
